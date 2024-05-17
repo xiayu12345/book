@@ -22,3 +22,9 @@
 
 * [🎨 For Designers](use-cases/for-designers.md)
 * [🖥️ For Developers](use-cases/for-developers.md)
+
+## 学习笔记
+
+* [C语言](xue-xi-bi-ji/c-yu-yan/README.md)
+  * [Page 1](xue-xi-bi-ji/c-yu-yan/page-1.md)
+  * [Page 2](xue-xi-bi-ji/c-yu-yan/page-2.md)
