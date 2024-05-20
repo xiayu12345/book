@@ -26,7 +26,7 @@
 ## 学习笔记
 
 * [C语言](xue-xi-bi-ji/c-yu-yan/README.md)
-  * [C语言关键字](xue-xi-bi-ji/c-yu-yan/c-yu-yan-guan-jian-zi.md)
+  * [关键字](xue-xi-bi-ji/c-yu-yan/guan-jian-zi.md)
   * [Page 2](xue-xi-bi-ji/c-yu-yan/page-2.md)
   * [Page 3](xue-xi-bi-ji/c-yu-yan/page-3.md)
   * [Page 4](xue-xi-bi-ji/c-yu-yan/page-4.md)
