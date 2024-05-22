@@ -1,17 +1,8 @@
 # Table of contents
 
-## 学习笔记
-
-* [Copy of C语言](README.md)
-  * [Page 1](xue-xi-bi-ji/copy-ofcyu-yan/page-1.md)
-  * [Page 2](xue-xi-bi-ji/copy-ofcyu-yan/page-2.md)
-  * [Page 3](xue-xi-bi-ji/copy-ofcyu-yan/page-3.md)
-  * [Page 4](xue-xi-bi-ji/copy-ofcyu-yan/page-4.md)
-  * [Page 5](xue-xi-bi-ji/copy-ofcyu-yan/page-5.md)
-
 ## 网络通信
 
-* [MQTT](wang-luo-tong-xin/mqtt/README.md)
+* [MQTT](README.md)
   * [MQTT入门](wang-luo-tong-xin/mqtt/mqtt-ru-men/README.md)
     * [基础知识](wang-luo-tong-xin/mqtt/mqtt-ru-men/ji-chu-zhi-shi.md)
     * [发布/订阅模式讲解](wang-luo-tong-xin/mqtt/mqtt-ru-men/fa-bu-ding-yue-mo-shi-jiang-jie.md)
@@ -52,9 +43,9 @@
 
 ## C语言
 
-* [C语言](c-yu-yan/c-yu-yan/README.md)
-  * [关键字](c-yu-yan/c-yu-yan/guan-jian-zi.md)
-  * [Page 2](c-yu-yan/c-yu-yan/page-2.md)
-  * [Page 3](c-yu-yan/c-yu-yan/page-3.md)
-  * [Page 4](c-yu-yan/c-yu-yan/page-4.md)
-  * [Page 5](c-yu-yan/c-yu-yan/page-5.md)
+* [C语言](<README (1).md>)
+  * [关键字](xue-xi-bi-ji/c-yu-yan/guan-jian-zi.md)
+  * [Page 2](xue-xi-bi-ji/c-yu-yan/page-2.md)
+  * [Page 3](xue-xi-bi-ji/c-yu-yan/page-3.md)
+  * [Page 4](xue-xi-bi-ji/c-yu-yan/page-4.md)
+  * [Page 5](xue-xi-bi-ji/c-yu-yan/page-5.md)

@@ -51,3 +51,4 @@ B)extern int i；
 {% hint style="info" %}
 定义声明最重要的区别：定义创建了对象并为这个对象分配了内存，声明没有分配内存
 {% endhint %}
+
