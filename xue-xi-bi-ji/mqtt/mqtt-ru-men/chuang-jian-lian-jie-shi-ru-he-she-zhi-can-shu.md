@@ -109,28 +109,4 @@ Session Expiry Interval 用于指定网络连接断开后会话的过期时间�
 
 ### **连接属性（Connect Properties）**
 
-MQTT 5.0 还新引入了连接属性的概念，进一步增强了协议的可扩展性。更多细节可查看博客：[MQTT 5.0 连接属性](https://www.emqx.com/zh/blog/mqtt5-connect-properties)。
-
-### 如何建立一个安全的 MQTT 连接？ <a href="#ru-he-jian-li-yi-ge-an-quan-de-mqtt-lian-jie" id="ru-he-jian-li-yi-ge-an-quan-de-mqtt-lian-jie"></a>
-
-虽然 MQTT 协议提供了用户名、密码、Client ID 等认证机制，但是这对于物联网安全来说还远远不够。基于传统的 TCP 通信使用明文传输，信息的安全性很难得到保证，数据也会存在被**窃听**、**篡改**、**伪造**、**冒充**的风险。
-
-SSL/TLS 的出现很好的解决了通信中的风险问题，其以非对称加密技术为主干，混合了不同模式的加密方式，既保证了通信中消息都以密文传输，避免了被窃听的风险，同时也通过签名防止了消息被篡改。
-
-不同 MQTT 服务器启用 SSL/TLS 的步骤都各有不同，EMQX 内置了对 TLS/SSL 的支持，包括支持单/双向认证、X.509 证书、负载均衡 SSL 等多种安全认证。
-
-单向认证是一种仅通过验证服务器证书来建立安全通信的方式，它能保证通信是加密的，但是不能验证客户端的真伪，通常需要与用户名、密码、Client ID 等认证机制结合。读者可参考博客[EMQX MQTT 服务器启用 SSL/TLS 安全连接](https://www.emqx.com/zh/blog/emqx-server-ssl-tls-secure-connection-configuration-guide)来建立一个安全的单向认证 MQTT 连接。
-
-双向认证是指在进行通信认证时要求服务端和客户端都提供证书，双方都需要进行身份认证，以确保通信中涉及的双方都是受信任的。 双方彼此共享其公共证书，然后基于该证书执行验证、确认。一些对安全性要求较高的应用场景，就需要开启双向 SSL/TLS 认证。读者查看博客[EMQX 启用双向 SSL/TLS 安全连接](https://www.emqx.com/zh/blog/enable-two-way-ssl-for-emqx)了解如何建立一个安全的双向认证 MQTT 连接。
-
-感兴趣的读者也可查看以下博客来学习物联网安全相关知识：
-
-* [如何保障物联网平台的安全性与健壮性](https://www.emqx.com/zh/blog/how-to-ensure-the-security-of-the-iot-platform)
-* [灵活多样认证授权，零开发投入保障 IoT 安全](https://www.emqx.com/zh/blog/securing-the-iot)
-* [车联网通信安全之 SSL/TLS 协议](https://www.emqx.com/zh/blog/ssl-tls-for-internet-of-vehicles-communication-security)
-
-> **注意：** 如果在浏览器端使用 MQTT over WebSocket 进行安全连接的话，目前还暂不支持双向认证通信。
-
-### 结语 <a href="#jie-yu" id="jie-yu"></a>
-
-至此，相信读者已对 MQTT 连接的建立及各个连接参数的作用有了深刻的理解。接下来，可访问 EMQ 提供的 [MQTT 入门与进阶](https://www.emqx.com/zh/mqtt-guide)系列文章学习 MQTT 主题及通配符、保留消息、遗嘱消息等相关概念，探索 MQTT 的更多高级应用，开启 MQTT 应用及服务开发。
+MQTT 5.0 还新引入了连接属性的概念，进一步增强了协议的可扩展性。更多细节可查看：[MQTT 5.0 连接属性](../mqtt5.0/mqtt-5.0-lian-jie-shu-xing.md)。

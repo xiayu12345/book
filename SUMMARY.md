@@ -63,6 +63,6 @@
     * [控制报文(Control Packels)](xue-xi-bi-ji/mqtt/mqtt-jin-jie/kong-zhi-bao-wen-control-packels.md)
   * [MQTT5.0](xue-xi-bi-ji/mqtt/mqtt5.0/README.md)
     * [MQTT 5.0：7 项新功能](xue-xi-bi-ji/mqtt/mqtt5.0/mqtt-5.07-xiang-xin-gong-neng.md)
-    * [Page 8](xue-xi-bi-ji/mqtt/mqtt5.0/page-8.md)
+    * [MQTT 5.0 连接属性](xue-xi-bi-ji/mqtt/mqtt5.0/mqtt-5.0-lian-jie-shu-xing.md)
   * [工具补充](xue-xi-bi-ji/mqtt/gong-ju-bu-chong.md)
   * [MQTT安全指南](xue-xi-bi-ji/mqtt/mqtt-an-quan-zhi-nan.md)
