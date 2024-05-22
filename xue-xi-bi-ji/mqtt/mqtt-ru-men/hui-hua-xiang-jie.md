@@ -14,7 +14,7 @@ layout:
 
 # 会话详解
 
-### 为什么需要会话？ <a href="#wei-shen-me-xu-yao-hui-hua" id="wei-shen-me-xu-yao-hui-hua"></a>
+## 为什么需要会话？ <a href="#wei-shen-me-xu-yao-hui-hua" id="wei-shen-me-xu-yao-hui-hua"></a>
 
 在物联网场景中，设备可能因为网络问题或者电源问题而频繁地断开连接。如果客户端和服务端总是以全新的上下文建立连接，那么将带来以下几个问题：
 
@@ -24,7 +24,7 @@ layout:
 
 为了避免这些问题，MQTT 协议设计了会话机制，它也构成了 MQTT 通信的基础。
 
-### 什么是 MQTT 会话？ <a href="#shen-me-shi-mqtt-hui-hua" id="shen-me-shi-mqtt-hui-hua"></a>
+## 什么是 MQTT 会话？ <a href="#shen-me-shi-mqtt-hui-hua" id="shen-me-shi-mqtt-hui-hua"></a>
 
 MQTT 会话本质上就是一组需要服务端和客户端额外存储的上下文数据，这些数据可以仅持续与网络连接一样长的时间，也可以跨越多个连续的网络连接存在。当客户端与服务端借助这些会话数据恢复通信时，可以让网络中断就像从未发生过一样。
 
@@ -51,9 +51,9 @@ MQTT 为服务端和客户端分别定义了它们需要存储的会话状态。
 
 针对这两点，MQTT 5.0 提供了 Clean Start 和 Session Expiry Interval 这两个连接字段来控制会话的生命周期。
 
-### Clean Start 介绍 <a href="#cleanstart-jie-shao" id="cleanstart-jie-shao"></a>
+## Clean Start 介绍 <a href="#cleanstart-jie-shao" id="cleanstart-jie-shao"></a>
 
-Clean Start 位于 CONNECT 报文的 [可变报头](https://www.emqx.com/zh/blog/introduction-to-mqtt-control-packets)，客户端在连接时通过这个字段指定是否复用已存在的会话，它只有 0 和 1 两个可取值。
+Clean Start 位于 CONNECT 报文的 [可变报头](../mqtt5.0/mqtt5.0-bao-wen/chu-shi-bao-wen.md)，客户端在连接时通过这个字段指定是否复用已存在的会话，它只有 0 和 1 两个可取值。
 
 **当 Clean Start 被设置为 0**，如果服务端存在与客户端连接时指定的 Client ID 关联的会话，那么它必须使用这个会话来恢复通信。
 
@@ -63,9 +63,9 @@ Clean Start 位于 CONNECT 报文的 [可变报头](https://www.emqx.com/zh/blog
 
 ![MQTT Clean Start](https://assets.emqx.com/images/5aa78a5c038aacafdbd314930e060c67.jpg?imageMogr2/thumbnail/1520x)
 
-### Session Expiry Interval 介绍 <a href="#sessionexpiryinterval-jie-shao" id="sessionexpiryinterval-jie-shao"></a>
+## Session Expiry Interval 介绍 <a href="#sessionexpiryinterval-jie-shao" id="sessionexpiryinterval-jie-shao"></a>
 
-Session Expiry Interval 同样位于 CONNECT 报文的可变报头，不过它是一个可选的连接 [属性](https://www.emqx.com/zh/blog/introduction-to-mqtt-control-packets)。它被用来指定会话在网络断开后能够在服务端保留的最长时间，如果到达过期时间但网络连接仍未恢复，服务端就会丢弃对应的会话状态。它有三个典型的值：
+Session Expiry Interval 同样位于 CONNECT 报文的可变报头，不过它是一个可选的连接 属性。它被用来指定会话在网络断开后能够在服务端保留的最长时间，如果到达过期时间但网络连接仍未恢复，服务端就会丢弃对应的会话状态。它有三个典型的值：
 
 1. **没有指定此属性或者设置为 0**，表示会话将在网络连接断开时立即结束。
 2. **设置为一个大于 0 的值**，则表示会话将在网络连接断开的多少秒之后过期。
@@ -77,13 +77,13 @@ MQTT 还允许客户端在断开连接时更新会话过期时间，这主要依
 
 ![MQTT Session Expiry Interval](https://assets.emqx.com/images/d988dd62c980580f1cef76b0fe9d9b98.jpg?imageMogr2/thumbnail/1520x)
 
-### 会话与 Client ID <a href="#hui-hua-yu-clientid" id="hui-hua-yu-clientid"></a>
+## 会话与 Client ID <a href="#hui-hua-yu-clientid" id="hui-hua-yu-clientid"></a>
 
 服务端使用 Client ID 来唯一地标识每个会话，如果客户端想要在连接时复用之前的会话，那么必须使用与此前一致的 Client ID。所以当我们使用服务端自动分配 Client ID 的功能时，客户端必须将 CONNACK 报文中返回的 Assigned Client Identifier 保存下来以供下次使用。
 
 注意，MQTT 5.0 之前的协议版本并不支持服务端返回自动分配的 Client ID，所以在由服务端自动分配 Client ID 和使用持久会话之间，我们只能二选一。
 
-### MQTT 3.1.1 中的 Clean Session <a href="#mqtt311-zhong-de-cleansession" id="mqtt311-zhong-de-cleansession"></a>
+## MQTT 3.1.1 中的 Clean Session <a href="#mqtt311-zhong-de-cleansession" id="mqtt311-zhong-de-cleansession"></a>
 
 MQTT 3.1.1 中的会话机制，在灵活性上远不如 5.0。因为 3.1.1 只有一个 Clean Session 字段，且它只有 0 和 1 两个可取值。
 
@@ -101,60 +101,10 @@ MQTT 3.1.1 中的会话机制，在灵活性上远不如 5.0。因为 3.1.1 只�
 
 所以相比于 MQTT 3.1.1，MQTT 5.0 在会话方面的改进是巨大的。
 
-### MQTT 持久会话的一些实践建议 <a href="#mqtt-chi-jiu-hui-hua-de-yi-xie-shi-jian-jian-yi" id="mqtt-chi-jiu-hui-hua-de-yi-xie-shi-jian-jian-yi"></a>
+## MQTT 持久会话的一些实践建议 <a href="#mqtt-chi-jiu-hui-hua-de-yi-xie-shi-jian-jian-yi" id="mqtt-chi-jiu-hui-hua-de-yi-xie-shi-jian-jian-yi"></a>
 
 在 MQTT 中，我们通常将生命周期长于网络连接的会话称为 **持久会话**。但是在使用持久会话时，我们有一些事项需要注意。
 
-譬如，我们需要正确地评估持久会话对服务器资源的影响，会话过期时间越长，服务端需要花费的存储资源就可能越多。虽然服务端通常并不会无限制地为客户端缓存消息，以 [EMQX](https://www.emqx.io/zh) 为例，默认情况下每个客户端会话中能够缓存的最大消息数量为 1000，但考虑到客户端的数量，这仍然可能是一个客观的存储成本。如果你的服务器资源有限，那么你可能需要更谨慎地设置会话过期时间和会话的最大缓存。
+譬如，我们需要正确地评估持久会话对服务器资源的影响，会话过期时间越长，服务端需要花费的存储资源就可能越多。虽然服务端通常并不会无限制地为客户端缓存消息，如果你的服务器资源有限，那么你可能需要更谨慎地设置会话过期时间和会话的最大缓存。
 
 另外，我们也需要评估客户端是否有必要在长时间离线后继续处理这些离线期间到达的消息。当然，设置较大的缓存以尽可能保存更多更久的消息，还是设置较小的缓存让客户端上线后仅处理最近一段时间到达的消息，主要取决于你的实际场景。
-
-### 演示 <a href="#yan-shi" id="yan-shi"></a>
-
-1.  安装并打开 [MQTTX](https://mqttx.app/zh)，为了更好地演示 MQTT 的会话机制，首先我们来到 MQTTX 的设置页面，关闭自动重订阅功能：
-
-    ![MQTTX](https://assets.emqx.com/images/c4468d62187f87ea1948ded7dc9cc6c1.png?imageMogr2/thumbnail/1520x)
-2.  创建一个名为 `sub` 的客户端连接，将 MQTT Version 设置为 5.0，开启 Clean Start，Session Expiry Interval 设置为 300 秒，然后连接到免费的 [公共 MQTT 服务器](https://www.emqx.com/zh/mqtt/public-mqtt5-broker) 并订阅主题 `mqttx_290c747e/test`：
-
-    ![MQTTX 创建客户端](https://assets.emqx.com/images/9c71204115d54271f12cad3ca86e4e30.png?imageMogr2/thumbnail/1520x)
-3.  创建一个名为 `pub` 的客户端连接向主题 `mqttx_290c747e/test` 发布消息，消息内容可以随意设置，我们将看到 `sub` 客户端收到这些消息。这时我们断开 `sub` 客户端的连接，然后继续通过 `pub` 客户端发布消息：
-
-    ![创建一个名为 pub 的客户端](https://assets.emqx.com/images/2596d8ca90d3d83e3945a6f87cbbc430.png?imageMogr2/thumbnail/1520x)
-4.  接下来，我们将 `sub` 客户端的 Clean Start 选项关闭，并保持 Session Expiry Interval 为 300 秒，然后再次连接。我们将看到 `sub` 客户端陆续收到我们在它离线期间发布的消息：
-
-    ![将 sub 客户端的 Clean Start 选项关闭](https://assets.emqx.com/images/c657006df302fdbf952cedeb867a536d.png?imageMogr2/thumbnail/1520x)
-
-    ![再次连接](https://assets.emqx.com/images/63ec97979353b2b2ada1e7fc74e56db4.png?imageMogr2/thumbnail/1520x)
-
-以上就是 MQTT 会话为离线客户端缓存消息的能力。在终端界面，我们还可以使用命令行工具 [MQTTX CLI](https://mqttx.app/zh/cli) 来完成以上操作。我们首先使用以下命令订阅主题，订阅成功后在终端输入 Ctrl+C 断开此客户端连接：
-
-```
-mqttx sub -h 'broker.emqx.io' --mqtt-version 5 --client-id mqttx_290c747e \
---session-expiry-interval 300 --topic mqttx_290c747e/test
-…  Connecting...
-✔  Connected
-…  Subscribing to mqttx_290c747e/test...
-✔  Subscribed to mqttx_290c747e/test
-^C
-```
-
-然后使用以下命令向主题 `mqttx_290c747e/test` 发布一条消息：
-
-```
-mqttx pub -h 'broker.emqx.io' --topic mqttx_290c747e/test --message "hello world"
-```
-
-发布成功后恢复订阅端的连接，注意我们在下面的命令中保持 Client ID 与之前相同，并且设置了 `--no-clean` 选项，我们将看到订阅端在连接成功后立刻收到了我们在连接之前发布的消息：
-
-```
-mqttx sub -h 'broker.emqx.io' --mqtt-version 5 --client-id mqttx_290c747e \
---no-clean --session-expiry-interval 300 --topic mqttx_290c747e/test
-…  Connecting... 
-✔  Connected
-…  Subscribing to mqttx_290c747e/test...
-payload: hello world
-
-✔  Subscribed to mqttx_290c747e/test
-```
-
-不管是 [MQTTX](https://mqttx.app/zh) 还是 [MQTTX CLI](https://mqttx.app/zh/cli)，它们作为 [MQTT 客户端工具](https://www.emqx.com/zh/blog/mqtt-client-tools)，主要目的是帮助大家快速上手 MQTT，所以并未提供一些非必要的特性，比如查看服务端返回的 Session Present，以及在断开连接时更新 Session Expiry Interval 等等。所以你对这一部分感兴趣，可以在 [这里](https://github.com/emqx/MQTT-Feature-Examples) 获取相应的 Python 示例代码以了解更多。
