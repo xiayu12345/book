@@ -41,5 +41,6 @@
   * [MQTT5.0](xue-xi-bi-ji/mqtt/mqtt5.0/README.md)
     * [MQTT 5.0：7 项新功能](xue-xi-bi-ji/mqtt/mqtt5.0/mqtt-5.07-xiang-xin-gong-neng.md)
     * [MQTT 5.0 连接属性](xue-xi-bi-ji/mqtt/mqtt5.0/mqtt-5.0-lian-jie-shu-xing.md)
+    * [MQTT报文](xue-xi-bi-ji/mqtt/mqtt5.0/mqtt-bao-wen.md)
   * [工具补充](xue-xi-bi-ji/mqtt/gong-ju-bu-chong.md)
   * [MQTT安全指南](xue-xi-bi-ji/mqtt/mqtt-an-quan-zhi-nan.md)

@@ -1,3 +1,17 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 基础知识
 
 ## 什么是 MQTT？ <a href="#shen-me-shi-mqtt" id="shen-me-shi-mqtt"></a>

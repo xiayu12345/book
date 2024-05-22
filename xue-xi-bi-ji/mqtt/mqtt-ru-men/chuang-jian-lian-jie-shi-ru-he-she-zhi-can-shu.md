@@ -1,3 +1,17 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 创建连接时如何设置参数
 
 ## MQTT 连接的基本概念 <a href="#mqtt-lian-jie-de-ji-ben-gai-nian" id="mqtt-lian-jie-de-ji-ben-gai-nian"></a>
