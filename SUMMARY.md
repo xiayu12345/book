@@ -40,7 +40,14 @@
       * [AUTH](wang-luo-tong-xin/mqtt/mqtt5.0/mqtt5.0-bao-wen/auth.md)
   * [工具补充](wang-luo-tong-xin/mqtt/gong-ju-bu-chong.md)
   * [MQTT安全指南](wang-luo-tong-xin/mqtt/mqtt-an-quan-zhi-nan.md)
-* [HTTP](wang-luo-tong-xin/http.md)
+* [HTTP](wang-luo-tong-xin/http/README.md)
+  * [了解HTTP和URl](wang-luo-tong-xin/http/le-jie-http-he-url/README.md)
+    * [初识URl](wang-luo-tong-xin/http/le-jie-http-he-url/chu-shi-url.md)
+    * [什么是Data URL](wang-luo-tong-xin/http/le-jie-http-he-url/shi-mo-shi-data-url.md)
+    * [Page 6](wang-luo-tong-xin/http/le-jie-http-he-url/page-6.md)
+    * [Page 7](wang-luo-tong-xin/http/le-jie-http-he-url/page-7.md)
+    * [Page 8](wang-luo-tong-xin/http/le-jie-http-he-url/page-8.md)
+    * [Copy of 了解HTTP和URl](wang-luo-tong-xin/http/le-jie-http-he-url/copy-of-le-jie-http-he-url.md)
 
 ## C语言
 
