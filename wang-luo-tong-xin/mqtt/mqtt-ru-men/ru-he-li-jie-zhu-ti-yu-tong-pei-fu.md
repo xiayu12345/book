@@ -85,8 +85,6 @@ sensor/1/temperature
 
 ![MQTT 共享订阅](https://assets.emqx.com/images/c248e9334ff6d32cbec0ed71cde98b1f.png?imageMogr2/thumbnail/1520x)
 
-另外，对于 MQTT 5.0 以下的版本，EMQX 还支持不带群组的共享订阅前缀 `$queue。`
-
 ## 不同场景中的主题设计 <a href="#bu-tong-chang-jing-zhong-de-zhu-ti-she-ji" id="bu-tong-chang-jing-zhong-de-zhu-ti-she-ji"></a>
 
 ### 智能家居 <a href="#zhi-neng-jia-ju" id="zhi-neng-jia-ju"></a>
@@ -154,7 +152,7 @@ MQTT 协议规定主题的长度为两个字节，因此主题最多可包含 **
 
 ### 服务器对主题数量有限制吗？ <a href="#fu-wu-qi-dui-zhu-ti-shu-liang-you-xian-zhi-ma" id="fu-wu-qi-dui-zhu-ti-shu-liang-you-xian-zhi-ma"></a>
 
-不同消息服务器对最大主题数量的支持各不一致，目前 EMQX 的默认配置对主题数量没有限制，但是主题数量越多将会消耗越多的服务器内存。考虑到连接到 MQTT Broker 的设备数量一般较多，我们建议一个客户端订阅的主题数量最好控制在 10 个以内。
+不同消息服务器对最大主题数量的支持各不一致，但是主题数量越多将会消耗越多的服务器内存。考虑到连接到 MQTT Broker 的设备数量一般较多，我们建议一个客户端订阅的主题数量最好控制在 10 个以内。
 
 ### 通配符主题订阅与普通主题订阅性能是否一致？ <a href="#tong-pei-fu-zhu-ti-ding-yue-yu-pu-tong-zhu-ti-ding-yue-xing-neng-shi-fou-yi-zhi" id="tong-pei-fu-zhu-ti-ding-yue-yu-pu-tong-zhu-ti-ding-yue-xing-neng-shi-fou-yi-zhi"></a>
 
