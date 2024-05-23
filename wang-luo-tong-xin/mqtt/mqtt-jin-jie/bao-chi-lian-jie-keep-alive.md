@@ -1,67 +1,63 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 保持连接（Keep Alive）
 
-### MQTT 发布/订阅模式 <a href="#mqtt-fa-bu-ding-yue-mo-shi" id="mqtt-fa-bu-ding-yue-mo-shi"></a>
+## 为什么需要 Keep Alive <a href="#wei-shen-me-xu-yao-keepalive" id="wei-shen-me-xu-yao-keepalive"></a>
 
-发布订阅模式（Publish-Subscribe Pattern）是一种消息传递模式，它将发送消息的客户端（发布者）与接收消息的客户端（订阅者）解耦，使得两者不需要建立直接的联系也不需要知道对方的存在。
+MQTT 协议是承载于 TCP 协议之上的，而 TCP 协议以连接为导向，在连接双方之间，提供稳定、有序的字节流功能。 但是，在部分情况下，TCP 可能出现半连接问题。所谓半连接，是指某一方的连接已经断开或者没有建立，而另外一方的连接却依然维持着。在这种情况下，半连接的一方可能会持续不断地向对端发送数据，而显然这些数据永远到达不了对端。为了避免半连接导致的通信黑洞，MQTT 协议提供了 **Keep Alive** 机制，使客户端和 MQTT 服务器可以判定当前是否存在半连接问题，从而关闭对应连接。
 
-MQTT 发布/订阅模式的精髓在于由一个被称为代理（Broker）的中间角色负责所有消息的路由和分发工作，发布者将带有主题的消息发送给代理，订阅者则向代理订阅主题来接收感兴趣的消息。
+## MQTT Keep Alive 的机制流程与使用 <a href="#mqttkeepalive-de-ji-zhi-liu-cheng-yu-shi-yong" id="mqttkeepalive-de-ji-zhi-liu-cheng-yu-shi-yong"></a>
 
-在 MQTT 中，主题和订阅无法被提前注册或创建，所以代理也无法预知某一个主题之后是否会有订阅者，以及会有多少订阅者，所以只能将消息转发给当前的订阅者，**如果当前不存在任何订阅，那么消息将被直接丢弃。**
+### 启用 Keep Alive <a href="#qi-yong-keepalive" id="qi-yong-keepalive"></a>
 
-MQTT 发布/订阅模式有 4 个主要组成部分：发布者、订阅者、代理和主题。
+客户端在创建和 MQTT Broker 的连接时，只要将连接请求协议包内的 _Keep Alive_ 可变头部字段设置为非 0 值，就可以在通信双方间启用 **Keep Alive** 机制。 _Keep Alive_ 为 0\~65535 的一个整数，代表客户端发送两次 MQTT 协议包之间的最大间隔时间。
 
-*   **发布者（Publisher）**
+而 Broker 在收到客户端的连接请求后，会检查可变头部中的 _Keep Alive_ 字段的值，如果有值，则 Broker 将会启用 **Keep Alive** 机制。
 
-    负责将消息发布到主题上，发布者一次只能向一个主题发送数据，发布者发布消息时也无需关心订阅者是否在线。
-*   **订阅者（Subscriber）**
+### MQTT 5.0 Server Keep Alive <a href="#mqtt-5-0-server-keep-alive" id="mqtt-5-0-server-keep-alive"></a>
 
-    订阅者通过订阅主题接收消息，且可一次订阅多个主题。MQTT 还支持通过[共享订阅](https://www.emqx.com/zh/blog/introduction-to-mqtt5-protocol-shared-subscription)的方式在多个订阅者之间实现订阅的负载均衡。
-*   **代理（Broker）**
+在 [MQTT 5.0](../mqtt5.0/mqtt-5.07-xiang-xin-gong-neng.md) 标准中，引入了 _Server Keep Alive_ 的概念，允许 Broker 根据自身的实现等因素，选择接受客户端请求中携带的 _Keep Alive_ 值，或者是覆盖这个值。如果 Broker 选择覆盖这个值，则需要将新值设置在连接确认包(**CONNACK**) 的 _Server Keep Alive_ 字段中，客户端如果在连接确认包中读取到了 _Server Keep Alive_，则需要使用该值，覆盖自己之前的 _Keep Alive_ 的值。
 
-    负责接收发布者的消息，并将消息转发至符合条件的订阅者。另外，代理也需要负责处理客户端发起的连接、断开连接、订阅、取消订阅等请求。
-*   **主题（Topic）**
+## Keep Alive 机制流程 <a href="#keepalive-ji-zhi-liu-cheng" id="keepalive-ji-zhi-liu-cheng"></a>
 
-    主题是 MQTT 进行消息路由的基础，它类似 URL 路径，使用斜杠 `/` 进行分层，比如 `sensor/1/temperature`。一个主题可以有多个订阅者，代理会将该主题下的消息转发给所有订阅者；一个主题也可以有多个发布者，代理将按照消息到达的顺序转发。
+### **客户端流程**
 
-    MQTT 还支持订阅者使用主题通配符一次订阅多个主题。更多关于 MQTT 主题的介绍可查看博客：[通过案例理解 MQTT 主题与通配符](https://www.emqx.com/zh/blog/advanced-features-of-mqtt-topics)。
+在连接建立后，客户端需要确保, 自己任意两次 MQTT 协议包的发送间隔不超过 _Keep Alive_ 的值，如果客户端当前处于空闲状态，没有可发送的包，则可以发送 **PINGREQ** 协议包。
 
-![MQTT 发布/订阅架构](https://assets.emqx.com/images/f7db4191e1ec1a292fc0b0cb306fc761.png?imageMogr2/thumbnail/1520x)
+当客户端发送 **PINGREQ** 协议包后，Broker 必须返回一个 **PINGRESP** 协议包，如果客户端在一个可靠的时间内，没有收到服务器的 **PINGRESP** 协议包，则说明当前存在半连接、或者 Broker 已经下线、或者出现了网络故障，这个时候，客户端应当关闭当前连接。
 
-MQTT 发布/订阅架构
+### **Broker 流程**
 
-### MQTT 发布/订阅中的消息路由 <a href="#mqtt-fa-bu-ding-yue-zhong-de-xiao-xi-lu-you" id="mqtt-fa-bu-ding-yue-zhong-de-xiao-xi-lu-you"></a>
+在连接建立后，Broker 如果没有在 _Keep Alive_ 的 1.5 倍时间内，收到来自客户端的任何包，则会认为和客户端之间的连接出现了问题，此时 Broker 便会断开和客户端的连接。
 
-在 MQTT 发布/订阅模式中，一个客户端既可以是发布者，也可以是订阅者，也可以同时具备这两个身份。 当客户端发布一条消息时，它会被发送到代理，然后代理将消息路由到该主题的所有订阅者。 当客户端订阅一个主题时，它会收到代理转发到该主题的所有消息。
+如果 Broker 收到了来自客户端的 **PINGREQ** 协议包，需要回复一个 **PINGRESP** 协议包进行确认。
 
-一般来说，大多数发布/订阅系统主要通过以下两种方式过滤并路由消息。
+### **客户端接管机制**
 
-*   根据主题
+当 Broker 里存在半连接时，如果对应的客户端发起了重连或新的连接，则 Broker 会启动客户端接管机制：关闭旧的半连接，然后与客户端建立新的连接。
 
-    订阅者向代理订阅自己感兴趣的主题，发布者发布的所有消息中都会包含自己的主题，代理根据消息的主题判断需要将消息转发给哪些订阅者。
-*   根据消息内容
+这种机制保证了客户端不会因为 Broker 里存在的半连接，导致无法进行重连。
 
-    订阅者定义其感兴趣的消息的条件，只有当消息的属性或内容满足订阅者定义的条件时，消息才会被投递到该订阅者。
+### Keep Alive 与遗嘱消息 <a href="#keepalive-yu-yi-zhu-xiao-xi" id="keepalive-yu-yi-zhu-xiao-xi"></a>
 
-MQTT 协议是基于主题进行消息路由的，在这个基础上，EMQX 从 3.1 版本开始通过基于 SQL 的规则引擎提供了额外的按消息内容进行路由的能力。关于规则引擎的详细信息，请查看 [EMQX 文档](https://www.emqx.io/docs/zh/v5.0/data-integration/rules.html)。
+Keep Alive 通常还可以与遗嘱消息结合使用，通过遗嘱消息，设备可将自己的意外掉线情况及时通知第三方。
 
-### MQTT 与 HTTP 请求响应 <a href="#mqtt-yu-http-qing-qiu-xiang-ying" id="mqtt-yu-http-qing-qiu-xiang-ying"></a>
+如下图，该客户端连接时设置了 Keep Alive 为 5 秒，并且设置了遗嘱消息。那么当服务器 7.5 秒（1.5 倍 Keep Alive）内未收到该客户端的任何报文时，即会向 `last_will` 主题发送 Payload 为 `offline` 的遗嘱消息。
 
-HTTP 是万维网数据通信的基础，其简单易用无客户端依赖，被广泛应用于各个行业。在物联网领域，HTTP 也可以用于连接物联网设备和 Web 服务器，实现设备的远程监控和控制。
+![MQTT Keep Alive 与遗嘱消息](https://assets.emqx.com/images/3fc9e2c463bd38c21dc7f523520c7076.png?imageMogr2/thumbnail/1520x)
 
-虽然使用简单、开发周期短，但是基于请求响应的 HTTP 在物联网领域的应用却有一定的局限性。首先，协议层面 HTTP 报文相较与 MQTT 需要占用更多的网络开销；其次，HTTP 是一种无状态协议，这意味着服务器在处理请求时不会记录客户端的状态，也无法实现从连接异常断开中恢复；最后，请求响应模式需要通过轮询才能获取数据更新，而 MQTT 通过订阅即可获取实时数据更新。
-
-发布订阅模式的松耦合特性，也给 MQTT 带来了一些副作用。由于发布者并不知晓订阅者的状态，因此发布者也无法得知订阅者是否收到了消息，或者是否正确处理了消息。为此，MQTT 5.0 增加了[请求响应](https://www.emqx.com/zh/blog/mqtt5-request-response)特性，以实现订阅者收到消息后向某个主题发送应答，发布者收到应答后再进行后续操作。
-
-### MQTT 与消息队列 <a href="#mqtt-yu-xiao-xi-dui-lie" id="mqtt-yu-xiao-xi-dui-lie"></a>
-
-尽管 MQTT 与消息队列的很多行为和特性非常接近，比如都采用发布/订阅模式，但是他们面向的场景却有着显著的不同。消息队列主要用于服务端应用之间的消息存储与转发，这类场景往往数据量大但客户端数量少。MQTT 是一种消息传输协议，主要用于物联网设备之间的消息传递，这类场景的特点是海量的设备接入、管理与消息传输。
-
-在一些实际的应用场景中，MQTT 与消息队列往往会被结合起来使用，以使 MQTT 服务器能专注于处理设备的连接与设备间的消息路由。比如先由 MQTT 服务器接收物联网设备上报的数据，然后再通过消息队列将这些数据转发到不同的业务系统进行处理。
-
-不同于消息队列，MQTT 主题不需要提前创建。[MQTT 客户端](https://www.emqx.com/zh/blog/mqtt-client-tools)在订阅或发布时即自动的创建了主题，开发者无需再关心主题的创建，并且也不需要手动删除主题。
-
-### 结语 <a href="#jie-yu" id="jie-yu"></a>
-
-MQTT 的发布/订阅机制可以很轻易地满足我们一对一、一对多、多对一的通信需要。这也在很大程度上拓宽了 MQTT 在 IoT 领域之外的应用，像网络直播互动、手机消息推送等行业场景，都非常适合使用 MQTT。
-
-至此，相信读者已对 MQTT 的发布/订阅模式有了深刻的理解，接下来，可查看博客[创建 MQTT 连接时如何设置参数？](https://www.emqx.com/zh/blog/how-to-set-parameters-when-establishing-an-mqtt-connection)了解如何创建一个 MQTT 连接。或访问 EMQ 提供的 [MQTT 入门与进阶](https://www.emqx.com/zh/mqtt-guide)系列文章学习 MQTT 主题及通配符、保留消息、遗嘱消息等相关概念，探索 MQTT 的更多高级应用，开启 MQTT 应用及服务开发。
+{% hint style="info" %}
+更多关于遗嘱消息的介绍可查看：[MQTT 遗嘱消息（Will Message）的使用](yi-zhu-xiao-xi-will-messages.md)。
+{% endhint %}

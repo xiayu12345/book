@@ -26,6 +26,7 @@
     * [原因码表及速查表（Reason Codes & Quick Reference）](wang-luo-tong-xin/mqtt/mqtt-jin-jie/yuan-yin-ma-biao-ji-su-cha-biao-reason-codes-quick-reference.md)
     * [增强认证(Enhanced Authentication)](wang-luo-tong-xin/mqtt/mqtt-jin-jie/zeng-qiang-ren-zheng-enhanced-authentication.md)
     * [控制报文(Control Packels)](wang-luo-tong-xin/mqtt/mqtt-jin-jie/kong-zhi-bao-wen-control-packels.md)
+  * [MQTT术语表](wang-luo-tong-xin/mqtt/mqtt-shu-yu-biao.md)
   * [MQTT5.0](wang-luo-tong-xin/mqtt/mqtt5.0/README.md)
     * [MQTT 5.0：7 项新功能](wang-luo-tong-xin/mqtt/mqtt5.0/mqtt-5.07-xiang-xin-gong-neng.md)
     * [MQTT 5.0 连接属性](wang-luo-tong-xin/mqtt/mqtt5.0/mqtt-5.0-lian-jie-shu-xing.md)

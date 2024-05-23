@@ -1,67 +1,78 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 请求响应(Requset/Response)
 
-### MQTT 发布/订阅模式 <a href="#mqtt-fa-bu-ding-yue-mo-shi" id="mqtt-fa-bu-ding-yue-mo-shi"></a>
+## MQTT 5.0 之前的“请求 / 响应” <a href="#mqtt50-zhi-qian-de-qing-qiu-xiang-ying" id="mqtt50-zhi-qian-de-qing-qiu-xiang-ying"></a>
 
-发布订阅模式（Publish-Subscribe Pattern）是一种消息传递模式，它将发送消息的客户端（发布者）与接收消息的客户端（订阅者）解耦，使得两者不需要建立直接的联系也不需要知道对方的存在。
+MQTT 的发布订阅机制，使消息的发送者和接收者完全解耦，所以消息可以被异步地传递。但这也带来了一个问题，即便是使用了 QoS 1 或 2 的消息，发布端也只能确保消息到达服务端，而无法知晓订阅端最终是否收到了消息。在执行一些请求或命令时，发布端还会想要知道对端的执行结果。最直接的做法是，让订阅端为请求返回响应。
 
-MQTT 发布/订阅模式的精髓在于由一个被称为代理（Broker）的中间角色负责所有消息的路由和分发工作，发布者将带有主题的消息发送给代理，订阅者则向代理订阅主题来接收感兴趣的消息。
+在 MQTT 中，这不难实现，只需要通信双方提前协商好请求主题和响应主题，然后订阅端在收到请求后向响应主题返回响应即可。这也是 MQTT 5.0 之前的客户端普遍采用的做法。
 
-在 MQTT 中，主题和订阅无法被提前注册或创建，所以代理也无法预知某一个主题之后是否会有订阅者，以及会有多少订阅者，所以只能将消息转发给当前的订阅者，**如果当前不存在任何订阅，那么消息将被直接丢弃。**
+但在这个方案中，响应主题必须提前确定，无法灵活地变更。当存在多个不同的请求方时，由于只能订阅相同的响应主题，所以所有请求方都会收到响应，并且**它们无法分辨响应是否属于自己**：
 
-MQTT 发布/订阅模式有 4 个主要组成部分：发布者、订阅者、代理和主题。
+![01requestresponsebeforemqtt5.jpg](https://assets.emqx.com/images/67cf464afec7fb78ba1676358bdfd6aa.jpg?imageMogr2/thumbnail/1520x)
 
-*   **发布者（Publisher）**
+{% hint style="info" %}
+存在多个请求方时，容易出现响应混乱的问题
+{% endhint %}
 
-    负责将消息发布到主题上，发布者一次只能向一个主题发送数据，发布者发布消息时也无需关心订阅者是否在线。
-*   **订阅者（Subscriber）**
+虽然有不少办法可以避免这一问题，但这也导致各个厂商可能有着完全不同的实现，这使用户在集成不同厂商设备时的难度和工作量极大增加。
 
-    订阅者通过订阅主题接收消息，且可一次订阅多个主题。MQTT 还支持通过[共享订阅](https://www.emqx.com/zh/blog/introduction-to-mqtt5-protocol-shared-subscription)的方式在多个订阅者之间实现订阅的负载均衡。
-*   **代理（Broker）**
+为了解决以上问题，MQTT 5.0 引入了响应主题 (Response Topic)、关联数据 (Correlation Data) 和响应信息 (Response Information) 这些属性使 MQTT 中的“请求 / 响应”机制标准化、规范化。
 
-    负责接收发布者的消息，并将消息转发至符合条件的订阅者。另外，代理也需要负责处理客户端发起的连接、断开连接、订阅、取消订阅等请求。
-*   **主题（Topic）**
+## MQTT 5.0 的“请求 / 响应”如何运作? <a href="#mqtt50-de-qing-qiu-xiang-ying-ru-he-yun-zuo" id="mqtt50-de-qing-qiu-xiang-ying-ru-he-yun-zuo"></a>
 
-    主题是 MQTT 进行消息路由的基础，它类似 URL 路径，使用斜杠 `/` 进行分层，比如 `sensor/1/temperature`。一个主题可以有多个订阅者，代理会将该主题下的消息转发给所有订阅者；一个主题也可以有多个发布者，代理将按照消息到达的顺序转发。
+### 响应主题 <a href="#xiang-ying-zhu-ti" id="xiang-ying-zhu-ti"></a>
 
-    MQTT 还支持订阅者使用主题通配符一次订阅多个主题。更多关于 MQTT 主题的介绍可查看博客：[通过案例理解 MQTT 主题与通配符](https://www.emqx.com/zh/blog/advanced-features-of-mqtt-topics)。
+在 MQTT 5.0 中，请求方可以在请求消息中指定一个自己期望的响应主题 (Response Topic)。响应方根据请求内容采取适当的操作后，向请求中携带的响应主题发布响应消息。如果请求方订阅了该响应主题，那么就会收到响应。
 
-![MQTT 发布/订阅架构](https://assets.emqx.com/images/f7db4191e1ec1a292fc0b0cb306fc761.png?imageMogr2/thumbnail/1520x)
+![02responsetopic2.jpg](https://assets.emqx.com/images/790d8c87fe2670dd6454d8456bf41ab0.jpg?imageMogr2/thumbnail/1520x)
 
-MQTT 发布/订阅架构
+请求方可以将自己的 Client ID 作为响应主题的一部分，这可以有效避免不同的请求方不小心使用了相同的响应主题而造成冲突。
 
-### MQTT 发布/订阅中的消息路由 <a href="#mqtt-fa-bu-ding-yue-zhong-de-xiao-xi-lu-you" id="mqtt-fa-bu-ding-yue-zhong-de-xiao-xi-lu-you"></a>
+### 关联数据 <a href="#guan-lian-shu-ju" id="guan-lian-shu-ju"></a>
 
-在 MQTT 发布/订阅模式中，一个客户端既可以是发布者，也可以是订阅者，也可以同时具备这两个身份。 当客户端发布一条消息时，它会被发送到代理，然后代理将消息路由到该主题的所有订阅者。 当客户端订阅一个主题时，它会收到代理转发到该主题的所有消息。
+请求方还可以在请求中携带关联数据 (Correlation Data)，响应方**必须**在响应中将关联数据**原封不动**地返回，请求方因此可以识别响应所属的原始请求。
 
-一般来说，大多数发布/订阅系统主要通过以下两种方式过滤并路由消息。
+这可以避免在响应方没有按请求顺序返回响应或者由于网络连接断开导致丢失了某个响应 (QoS 0) 时，请求方不正确地关联响应与原始请求。
 
-*   根据主题
+另一方面，请求方可能需要与多个响应方交互，譬如我们通过手机控制家中的各种智能设备，关联数据可以让请求方仅订阅一个响应主题就能管理从多个响应方异步返回的响应。
 
-    订阅者向代理订阅自己感兴趣的主题，发布者发布的所有消息中都会包含自己的主题，代理根据消息的主题判断需要将消息转发给哪些订阅者。
-*   根据消息内容
+![03correlationdata.png](https://assets.emqx.com/images/94f045c13ac06e422e8730928d3a51d5.png?imageMogr2/thumbnail/1520x)
 
-    订阅者定义其感兴趣的消息的条件，只有当消息的属性或内容满足订阅者定义的条件时，消息才会被投递到该订阅者。
+在以上“请求 / 响应”的过程中，MQTT 服务端不会对响应主题、关联数据进行任何更改，它仅起到转发的作用。
 
-MQTT 协议是基于主题进行消息路由的，在这个基础上，EMQX 从 3.1 版本开始通过基于 SQL 的规则引擎提供了额外的按消息内容进行路由的能力。关于规则引擎的详细信息，请查看 [EMQX 文档](https://www.emqx.io/docs/zh/v5.0/data-integration/rules.html)。
+### 响应信息 <a href="#xiang-ying-xin-xi" id="xiang-ying-xin-xi"></a>
 
-### MQTT 与 HTTP 请求响应 <a href="#mqtt-yu-http-qing-qiu-xiang-ying" id="mqtt-yu-http-qing-qiu-xiang-ying"></a>
+出于安全考虑，MQTT 服务端通常会限制客户端可以发布和订阅的主题。请求方可以指定一个随机的响应主题，但无法保证自己有订阅该主题的权限，也无法保证响应方有向该响应主题发布消息的权限。
 
-HTTP 是万维网数据通信的基础，其简单易用无客户端依赖，被广泛应用于各个行业。在物联网领域，HTTP 也可以用于连接物联网设备和 Web 服务器，实现设备的远程监控和控制。
+所以 MQTT 5.0 还引入了响应信息 (Response Information) 属性，通过在 CONNECT 报文中将请求响应信息(Request Response Information) 标识符设置为 1，客户端可以请求服务端在 CONNACK 报文中返回响应信息。客户端可以将响应信息的内容作为响应主题的某个特定部分，以便通过服务端的权限检查。
 
-虽然使用简单、开发周期短，但是基于请求响应的 HTTP 在物联网领域的应用却有一定的局限性。首先，协议层面 HTTP 报文相较与 MQTT 需要占用更多的网络开销；其次，HTTP 是一种无状态协议，这意味着服务器在处理请求时不会记录客户端的状态，也无法实现从连接异常断开中恢复；最后，请求响应模式需要通过轮询才能获取数据更新，而 MQTT 通过订阅即可获取实时数据更新。
+![04responseinformation.png](https://assets.emqx.com/images/5d299bd028d7d3d9851589e9eaa0477a.png?imageMogr2/thumbnail/1520x)
 
-发布订阅模式的松耦合特性，也给 MQTT 带来了一些副作用。由于发布者并不知晓订阅者的状态，因此发布者也无法得知订阅者是否收到了消息，或者是否正确处理了消息。为此，MQTT 5.0 增加了[请求响应](https://www.emqx.com/zh/blog/mqtt5-request-response)特性，以实现订阅者收到消息后向某个主题发送应答，发布者收到应答后再进行后续操作。
+MQTT 并未进一步约定这部分的细节，比如响应信息的内容格式以及客户端如何根据响应信息创建响应主题，所以不同服务端和客户端的实现可能有所不同。例如，服务端可以使用响应信息 “FRONT,mytopic” 既指示响应主题中特定部分的具体内容，又指示该特定部分在响应主题中的位置，也可以与客户端提前约定如何使用该特定部分，然后使用响应信息 “mytopic” 仅指示该特定部分的具体内容。
 
-### MQTT 与消息队列 <a href="#mqtt-yu-xiao-xi-dui-lie" id="mqtt-yu-xiao-xi-dui-lie"></a>
+以智能家居场景为例，智能设备不会跨用户使用，我们可以让 MQTT 服务端将设备所属用户的 ID 作为响应信息返回，客户端统一使用该用户 ID 作为响应主题的前缀。MQTT 服务端只需要确保这些客户端在它们会话的生命周期内，都拥有该用户 ID 开头的主题的发布和订阅权限即可。
 
-尽管 MQTT 与消息队列的很多行为和特性非常接近，比如都采用发布/订阅模式，但是他们面向的场景却有着显著的不同。消息队列主要用于服务端应用之间的消息存储与转发，这类场景往往数据量大但客户端数量少。MQTT 是一种消息传输协议，主要用于物联网设备之间的消息传递，这类场景的特点是海量的设备接入、管理与消息传输。
+## MQTT “请求 / 响应”的使用建议 <a href="#mqtt-qing-qiu-xiang-ying-de-shi-yong-jian-yi" id="mqtt-qing-qiu-xiang-ying-de-shi-yong-jian-yi"></a>
 
-在一些实际的应用场景中，MQTT 与消息队列往往会被结合起来使用，以使 MQTT 服务器能专注于处理设备的连接与设备间的消息路由。比如先由 MQTT 服务器接收物联网设备上报的数据，然后再通过消息队列将这些数据转发到不同的业务系统进行处理。
+以下是在 MQTT 中使用“请求 / 响应”时的一些建议，遵循这些建议将有助于你实施最佳实践：
 
-不同于消息队列，MQTT 主题不需要提前创建。[MQTT 客户端](https://www.emqx.com/zh/blog/mqtt-client-tools)在订阅或发布时即自动的创建了主题，开发者无需再关心主题的创建，并且也不需要手动删除主题。
-
-### 结语 <a href="#jie-yu" id="jie-yu"></a>
-
-MQTT 的发布/订阅机制可以很轻易地满足我们一对一、一对多、多对一的通信需要。这也在很大程度上拓宽了 MQTT 在 IoT 领域之外的应用，像网络直播互动、手机消息推送等行业场景，都非常适合使用 MQTT。
-
-至此，相信读者已对 MQTT 的发布/订阅模式有了深刻的理解，接下来，可查看博客[创建 MQTT 连接时如何设置参数？](https://www.emqx.com/zh/blog/how-to-set-parameters-when-establishing-an-mqtt-connection)了解如何创建一个 MQTT 连接。或访问 EMQ 提供的 [MQTT 入门与进阶](https://www.emqx.com/zh/mqtt-guide)系列文章学习 MQTT 主题及通配符、保留消息、遗嘱消息等相关概念，探索 MQTT 的更多高级应用，开启 MQTT 应用及服务开发。
+1. MQTT 的 QoS 1 或 2 只能确保消息到达服务端，如果想要确认消息是否到达订阅端，可以借助“请求 / 响应”机制。
+2. 在发送请求前订阅响应主题以免错过响应。
+3. 确保响应方和请求方拥有发布和订阅响应主题的必要权限，响应信息 (Response Information) 可以帮助我们构建符合权限要求的响应主题。
+4. 存在多个请求方时，请求方需要使用不同的响应主题以免响应混淆，使用 Client ID 作为主题的一部分是常见的做法。
+5. 存在多个响应方时，请求方最好在请求中设置关联数据 (Correlation Data) 以免响应混淆。
+6. 遗嘱消息也可以使用“请求 / 响应”，只需要在连接时为遗嘱消息设置响应主题即可。这可以帮助客户端知道在自己离线期间遗嘱消息是否被消费，以便做出适当的调整。

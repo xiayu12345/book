@@ -1,76 +1,67 @@
+---
+layout:
+  title:
+    visible: false
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 订阅标识符（Subscription ldentifier）
 
-## 什么是 MQTT？ <a href="#shen-me-shi-mqtt" id="shen-me-shi-mqtt"></a>
+## 为什么需要订阅标识符 <a href="#wei-shen-me-xu-yao-ding-yue-biao-shi-fu" id="wei-shen-me-xu-yao-ding-yue-biao-shi-fu"></a>
 
-MQTT（Message Queuing Telemetry Transport）是一种轻量级、基于发布-订阅模式的消息传输协议，适用于资源受限的设备和低带宽、高延迟或不稳定的网络环境。它在物联网应用中广受欢迎，能够实现传感器、执行器和其它设备之间的高效通信.
+在大部分 MQTT 客户端的实现中，都会通过回调机制来实现对新到达消息的处理。
 
-## 为什么 MQTT 是适用于物联网的最佳协议？ <a href="#wei-shen-me-mqtt-shi-kuo-yong-yu-wu-lian-wang-de-zui-jia-xie-yi" id="wei-shen-me-mqtt-shi-kuo-yong-yu-wu-lian-wang-de-zui-jia-xie-yi"></a>
+但是在回调函数中，我们只能知道消息的主题名是什么。如果是非通配符订阅，订阅时使用的主题过滤器将和消息中的主题名完全一致，所以我们可以直接建立订阅主题与回调函数的映射关系。然后在消息到达时，根据消息中的主题名查找并执行对应的回调函数。
 
-MQTT 所具有的适用于物联网特定需求的特点和功能，使其成为物联网领域最佳的协议之一。它的主要特点包括：
+但如果是通配符订阅，消息中的主题名和订阅时的主题过滤器将是两个不同的字符串，我们只有将消息中的主题名与原始的订阅挨个进行主题匹配，才能确定应该执行哪个回调函数。这显然极大地影响了客户端的处理效率。
 
-* **轻量级：**物联网设备通常在处理能力、内存和能耗方面受到限制。MQTT 开销低、报文小的特点使其非常适合这些设备，因为它消耗更少的资源，即使在有限的能力下也能实现高效的通信。
-* **可靠：**物联网网络常常面临高延迟或连接不稳定的情况。MQTT 支持多种 QoS 等级、会话感知和持久连接，即使在困难的条件下也能保证消息的可靠传递，使其非常适合物联网应用。
-* **安全通信：**安全对于物联网网络至关重要，因为其经常涉及敏感数据的传输。为确保数据在传输过程中的机密性，MQTT 提供传输层安全（TLS）和安全套接层（SSL）加密功能。此外，MQTT 还通过用户名/密码凭证或客户端证书提供身份验证和授权机制，以保护网络及其资源的访问。
-* **双向通信：**MQTT 的发布-订阅模式为设备之间提供了无缝的双向通信方式。客户端既可以向主题发布消息，也可以订阅接收特定主题上的消息，从而实现了物联网生态系统中的高效数据交换，而无需直接将设备耦合在一起。这种模式也简化了新设备的集成，同时保证了系统易于扩展。
-* **连续、有状态的会话：**MQTT 提供了客户端与 Broker 之间保持有状态会话的能力，这使得系统即使在断开连接后也能记住订阅和未传递的消息。此外，客户端还可以在建立连接时指定一个保活间隔，这会促使 Broker 定期检查连接状态。如果连接中断，Broker 会储存未传递的消息（根据 QoS 级别确定），并在客户端重新连接时尝试传递它们。这个特性保证了通信的可靠性，降低了因间断性连接而导致数据丢失的风险。
-* **大规模物联网设备支持：**物联网系统往往涉及大量设备，需要一种能够处理大规模部署的协议。MQTT 的轻量级特性、低带宽消耗和对资源的高效利用使其成为大规模物联网应用的理想选择。通过采用发布-订阅模式，MQTT 实现了发送者和接收者的解耦，从而有效地减少了网络流量和资源使用。此外，协议对不同 QoS 等级的支持使得消息传递可以根据需求进行定制，确保在各种场景下获得最佳的性能表现。
-* **语言支持：**物联网系统包含使用各种编程语言开发的设备和应用。MQTT 具有广泛的语言支持，使其能够轻松与多个平台和技术进行集成，从而实现了物联网生态系统中的无缝通信和互操作性。
+![mqtt subscription identifier 01](https://assets.emqx.com/images/27648a4465bf3948af3a61e533fd8aad.png?imageMogr2/thumbnail/1520x)
 
-## MQTT 的工作原理 <a href="#mqtt-de-gong-zuo-yuan-li" id="mqtt-de-gong-zuo-yuan-li"></a>
+另外，因为 MQTT 允许一个客户端建立多个订阅，那么当客户端使用通配符订阅时，一条消息可能同时与一个客户端的多个订阅匹配。
 
-要了解 MQTT 的工作原理，首先需要掌握以下几个概念：MQTT 客户端、MQTT Broker、发布-订阅模式、主题、QoS。
+MQTT 允许服务端为这些重叠的订阅分别发送一次消息，也允许服务端只为这些重叠的订阅发送一条消息。
 
-**MQTT 客户端**
+当服务端采用前一种实现时，客户端必须额外对这些消息进行去重才能保证回调不会被重复执行：
 
-任何运行 MQTT 客户端库的应用或设备都是 MQTT 客户端。例如，使用 MQTT 的即时通讯应用是客户端，使用 MQTT 上报数据的各种传感器是客户端，各种 [MQTT 测试工具](../gong-ju-bu-chong.md)也是客户端。
+![mqtt subscription identifierm 02](https://assets.emqx.com/images/88ef650cac1ae4196fc008cda7d73279.png?imageMogr2/thumbnail/1520x)
 
-**MQTT Broker**
+## 订阅标识符的工作原理 <a href="#ding-yue-biao-shi-fu-de-gong-zuo-yuan-li" id="ding-yue-biao-shi-fu-de-gong-zuo-yuan-li"></a>
 
-MQTT Broker 是负责处理客户端请求的关键组件，包括建立连接、断开连接、订阅和取消订阅等操作，同时还负责消息的转发。一个高效强大的 MQTT Broker 能够轻松应对海量连接和百万级消息吞吐量，从而帮助物联网服务提供商专注于业务发展，快速构建可靠的 MQTT 应用。
+为了解决这个问题，MQTT 5.0 引入了订阅标识符。它的用法非常简单，客户端可以在订阅时指定一个订阅标识符，服务端则需要存储该订阅与订阅标识符的映射关系。当有匹配该订阅的 PUBLISH 报文要转发给此客户端时，服务端会将与该订阅关联的订阅标识符随 PUBLISH 报文一并返回给客户端。
 
-**发布-订阅模式**
+![mqtt subscription identifierm 03](https://assets.emqx.com/images/e31a72810ff815d622b68f501094a44a.png?imageMogr2/thumbnail/1520x)
 
-发布-订阅模式与客户端-服务器模式的不同之处在于，它将发送消息的客户端（发布者）和接收消息的客户端（订阅者）进行了解耦。发布者和订阅者之间无需建立直接连接，而是通过 MQTT Broker 来负责消息的路由和分发。
+如果服务端选择为重叠的订阅分别发送一次消息，那么每个 PUBLISH 报文都应该包含与订阅相匹配的订阅标识符，而如果服务端选择为重叠的订阅只发送一条消息，那么 PUBLISH 报文将包含多个订阅标识符。
 
-下图展示了 MQTT 发布/订阅过程。温度传感器作为客户端连接到 MQTT Broker，并通过发布操作将温度数据发布到一个特定主题（例如 `Temperature`）。MQTT Broker 接收到该消息后会负责将其转发给订阅了相应主题（`Temperature`）的订阅者客户端。
+客户端只需要建立订阅标识符与回调函数的映射，就可以通过消息中的订阅标识符得知这个消息来自哪个订阅，以及应该执行哪个回调函数。
 
-![MQTT 发布-订阅模式](https://assets.emqx.com/images/a6baf485733448bc9730f47bf1f41135.png?imageMogr2/thumbnail/1520x)
+![mqtt subscription identifierm 04](https://assets.emqx.com/images/3ddfab45720fc724434c2edaf47662f6.png?imageMogr2/thumbnail/1520x)
 
-**主题**
+在客户端中，订阅标识符并不属于会话状态的一部分，将订阅标识符和什么内容进行关联，完全由客户端决定。所以除了回调函数，我们也可以建立订阅标识符与订阅主题的映射，或者建立与 Client ID 的映射。后者在转发服务端消息给客户端的网关中非常有用。当消息从服务端到达网关，网关只要根据订阅标识符就能够知道应该将消息转发给哪个客户端，而不需要重新做一次主题的匹配和路由。
 
-MQTT 协议根据主题来转发消息。主题通过 `/` 来区分层级，类似于 URL 路径，例如：
+一个订阅报文只能包含一个订阅标识符，如果一个订阅报文中有多个订阅请求，那么这个订阅标识符将同时和这些订阅相关联。所以请尽量确保将多个订阅关联至同一个回调是您有意为之的。
 
-```
-chat/room/1
+## 如何使用订阅标识符 <a href="#ru-he-shi-yong-ding-yue-biao-shi-fu" id="ru-he-shi-yong-ding-yue-biao-shi-fu"></a>
 
-sensor/10/temperature
+1. 在 Web 浏览器上访问 MQTTX Web。
+2.  创建一个使用 WebSocket 的 MQTT 连接，并且连接免费的 公共 MQTT 服务器：
 
-sensor/+/temperature
-```
+    ![MQTT over WebSocket](https://assets.emqx.com/images/e1c10cbd018d0742f21f3b371ec89c6a.png?imageMogr2/thumbnail/1520x)
+3.  连接成功后，我们先订阅主题 `mqttx_4299c767/home/+`，并指定 Subscription Identifier 为 1，然后订阅主题 `mqttx_4299c767/home/PM2_5`，并指定 Subscription Identifier 为 2。由于公共服务器可能同时被很多人使用，为了避免主题与别人重复，这里我们将 Client ID 作为主题前缀：
 
-MQTT 主题支持以下两种通配符：`+` 和 `#`。
+    ![New Subscription 1](https://assets.emqx.com/images/f3c0aed851e02f20aae69cf100b167d6.png?imageMogr2/thumbnail/1520x)
 
-* `+`：表示单层通配符，例如 `a/+` 匹配 `a/x` 或 `a/y`。
-* `#`：表示多层通配符，例如 `a/#` 匹配 `a/x`、`a/b/c/d`。
+    ![New Subscription 2](https://assets.emqx.com/images/212728b6ae71b5baf73a860f75d4545a.png?imageMogr2/thumbnail/1520x)
+4.  订阅成功后，我们向主题 `mqttx_4299c767/home/PM2_5` 发布一条消息。我们将看到当前客户端收到了两条消息，消息中的 Subscription Identifier 分别为 1 和 2。这是因为 EMQX 的实现是为重叠的订阅分别发送一条消息：
 
-> **注意**：通配符主题只能用于订阅，不能用于发布。
+    ![Receive MQTT Messages](https://assets.emqx.com/images/fd38994dea83422bb31a85b5c14711b1.png?imageMogr2/thumbnail/1520x)
+5.  而如果我们向主题 `mqttx_4299c767/home/temperature` 发布一条消息，我们将看到收到消息中的 Subscription Identifier 为 1：
 
-关于 MQTT 主题的更多详情，请参阅文章[通过案例理解 MQTT 主题与通配符](../mqtt-ru-men/ru-he-li-jie-zhu-ti-yu-tong-pei-fu.md)。
-
-**QoS**
-
-MQTT 提供了三种服务质量（QoS），在不同网络环境下保证消息的可靠性。
-
-* QoS 0：消息最多传送一次。如果当前客户端不可用，它将丢失这条消息。
-* QoS 1：消息至少传送一次。
-* QoS 2：消息只传送一次。
-
-关于 MQTT QoS 的更多详情，可参考 [MQTT QoS 0, 1, 2 介绍](../mqtt-ru-men/li-jie-qos.md)。
-
-## MQTT 的工作流程 <a href="#mqtt-de-gong-zuo-liu-cheng" id="mqtt-de-gong-zuo-liu-cheng"></a>
-
-在了解了 MQTT 之后，让我们来看看它的一般工作流程：
-
-1. **客户端使用 TCP/IP 协议与 Broker 建立连接**，可以选择使用 TLS/SSL 加密来实现安全通信。客户端提供认证信息，并指定会话类型（Clean Session 或 Persistent Session）。
-2. **客户端既可以向特定主题发布消息，也可以订阅主题以接收消息**。当客户端发布消息时，它会将消息发送给 MQTT Broker；而当客户端订阅消息时，它会接收与订阅主题相关的消息。
-3. **MQTT Broker 接收发布的消息**，并将这些消息转发给订阅了对应主题的客户端。它根据 QoS 等级确保消息可靠传递，并根据会话类型为断开连接的客户端存储消息。
+    ![image.png](https://assets.emqx.com/images/f0a2dba909a1efa8fab0b07ea961a959.png?imageMogr2/thumbnail/1520x)
